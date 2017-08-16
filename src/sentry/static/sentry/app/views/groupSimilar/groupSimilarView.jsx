@@ -6,7 +6,6 @@ import GroupingActions from '../../actions/groupingActions';
 import GroupingStore from '../../stores/groupingStore';
 import LoadingError from '../../components/loadingError';
 import LoadingIndicator from '../../components/loadingIndicator';
-import MergedList from './mergedList';
 import ProjectState from '../../mixins/projectState';
 import SimilarList from './similarList';
 
@@ -19,10 +18,8 @@ const GroupGroupingView = React.createClass({
 
   getInitialState() {
     return {
-      mergedItems: [],
       similarItems: [],
       filteredSimilarItems: [],
-      mergedLinks: [],
       similarLinks: [],
       loading: true,
       error: false
@@ -42,19 +39,9 @@ const GroupGroupingView = React.createClass({
     }
   },
 
-  onGroupingUpdate({
-    mergedItems,
-    mergedLinks,
-    similarItems,
-    similarLinks,
-    filteredSimilarItems,
-    loading,
-    error
-  }) {
-    if (mergedItems && similarItems) {
+  onGroupingUpdate({similarItems, similarLinks, filteredSimilarItems, loading, error}) {
+    if (similarItems) {
       this.setState({
-        mergedItems,
-        mergedLinks,
         similarItems,
         similarLinks,
         filteredSimilarItems,
@@ -81,13 +68,7 @@ const GroupGroupingView = React.createClass({
       error: false
     });
 
-    let reqs = [
-      {
-        endpoint: this.getEndpoint('hashes'),
-        dataKey: 'merged',
-        queryParams: this.props.location.query
-      }
-    ];
+    let reqs = [];
 
     if (projectFeatures.has('similarity-view')) {
       reqs.push({
@@ -111,23 +92,11 @@ const GroupGroupingView = React.createClass({
     }
   },
 
-  handleUnmerge() {
-    let {params} = this.props;
-
-    GroupingActions.unmerge({
-      groupId: params.groupId,
-      loadingMessage: `${t('Unmerging events')}...`,
-      successMessage: t('Events successfully queued for unmerging.'),
-      errorMessage: t('Unable to queue events for unmerging.')
-    });
-  },
-
   render() {
-    let {orgId, projectId, groupId} = this.props.params;
+    let {orgId, projectId} = this.props.params;
     let isLoading = this.state.loading;
     let isError = this.state.error && !isLoading;
     let projectFeatures = this.getProjectFeatures();
-    let hasMergedItems = this.state.mergedItems.length >= 0 && !isError && !isLoading;
     let hasSimilarItems =
       projectFeatures.has('similarity-view') &&
       (this.state.similarItems.length >= 0 ||
@@ -156,18 +125,6 @@ const GroupGroupingView = React.createClass({
             orgId={orgId}
             projectId={projectId}
             pageLinks={this.state.similarLinks}
-          />}
-
-        {hasMergedItems &&
-          <MergedList
-            items={this.state.mergedItems}
-            onUnmerge={this.handleUnmerge}
-            orgId={orgId}
-            projectId={projectId}
-            groupId={groupId}
-            pageLinks={this.state.mergedLinks}
-            busyMap={this.state.busy}
-            hiddenMap={this.state.hidden}
           />}
 
       </div>
